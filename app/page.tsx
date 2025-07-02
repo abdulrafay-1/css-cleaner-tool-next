@@ -1,103 +1,234 @@
-import Image from "next/image";
+"use client"
+import { useState } from 'react'
+import { useDarkMode } from '../hooks/useTheme'
+import VscodeEditor from '../components/VscodeEditor'
+import { extractSelectorsAdvanced } from '../utils/extractSelectors'
+import { parseAdvancedCSS } from '../utils/parseCss'
+import { calculateStats, formatResult } from '../utils/calcuatesStats'
+import { BrushCleaning, Code2, FileJson2, LucideMoon, LucideSun } from 'lucide-react'
 
-export default function Home() {
+const Home = () => {
+  const [html, setHtml] = useState('')
+  const [css, setCss] = useState('')
+  const [result, setResult] = useState('')
+  const { dark, toggleDarkMode } = useDarkMode()
+
+  // const handleCleanCss = () => {
+  //   if (!html.trim() || !css.trim()) {
+  //     setResult('');
+  //     return;
+  //   }
+
+  //   try {
+  //     const startTime = performance.now();
+
+  //     // Extract classes more efficiently
+  //     const usedClasses = new Set();
+  //     const classMatches = html.match(/(?:class|className)\s*=\s*["'`]([^"'`]*)["'`]/g);
+
+  //     if (classMatches) {
+  //       classMatches.forEach(match => {
+  //         const classes = match.replace(/(?:class|className)\s*=\s*["'`]([^"'`]*)["'`]/, '$1');
+  //         classes.split(/\s+/).filter(Boolean).forEach(cls => usedClasses.add(cls));
+  //       });
+  //     }
+
+  //     // Parse CSS more efficiently using string operations
+  //     const cssRules = [];
+  //     let currentPos = 0;
+  //     const cssLength = css.length;
+
+  //     while (currentPos < cssLength) {
+  //       // Find next CSS rule
+  //       const ruleStart = css.indexOf('.', currentPos);
+  //       if (ruleStart === -1) break;
+
+  //       const ruleEnd = css.indexOf('}', ruleStart);
+  //       if (ruleEnd === -1) break;
+
+  //       const rule = css.substring(ruleStart, ruleEnd + 1);
+  //       const classMatch = rule.match(/^\.([a-zA-Z_-][a-zA-Z0-9_-]*)/);
+
+  //       if (classMatch && usedClasses.has(classMatch[1])) {
+  //         cssRules.push(rule);
+  //       }
+
+  //       currentPos = ruleEnd + 1;
+  //     }
+
+  //     const endTime = performance.now();
+  //     const processingTime = Math.round(endTime - startTime);
+
+  //     const result = cssRules.join('\n');
+  //     setResult(result + `\n\n/* Processed in ${processingTime}ms */`);
+
+  //   } catch (error) {
+  //     console.error('Error cleaning CSS:', error);
+  //     setResult('/* Error processing CSS. Please check your input. */');
+  //   }
+  // };
+
+
+  // Types and Interfaces
+
+
+
+  // Main cleaning function with full type safety
+  const handleCleanCss = (): void => {
+    if (!html.trim() || !css.trim()) {
+      setResult('');
+      return;
+    }
+
+    try {
+      const startTime: number = performance.now();
+
+      // Enhanced class and ID extraction
+      const { usedClasses, usedIds } = extractSelectorsAdvanced(html);
+
+      console.log(`Found ${usedClasses.size} classes and ${usedIds.size} IDs`);
+
+      // Advanced SCSS/CSS Parser with type safety
+      const parsedRules: string[] = parseAdvancedCSS(css, usedClasses, usedIds);
+
+      const endTime: number = performance.now();
+      const processingTime: number = Math.round(endTime - startTime);
+
+      const stats = calculateStats(css, parsedRules, processingTime);
+      const result: string = formatResult(parsedRules, stats);
+
+      setResult(result);
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error cleaning CSS:', errorMessage);
+      setResult(`/* Error processing CSS: ${errorMessage} */`);
+    }
+  };
+
+
+  // Count CSS rules with type safety
+
+
+  // Format final result with type safety
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-blue-50 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
+      <div className="container mx-auto px-4 py-10 max-w-7xl">
+        {/* Header */}
+        <div className="flex md:flex-row justify-between items-center mb-10 gap-4">
+          <div>
+            <h1 className="flex items-center gap-1 text-2xl md:text-4xl font-extrabold text-blue-700 dark:text-blue-200 tracking-tight drop-shadow-sm text-center md:text-left">
+              <BrushCleaning />
+              <span>
+              </span>
+              CSS Cleaner Tool
+            </h1>
+            <p className="mt-2 text-blue-800 dark:text-blue-300 text-base font-medium max-w-xl">
+              Instantly clean and optimize your CSS with one click.
+            </p>
+          </div>
+          <button
+            onClick={toggleDarkMode}
+            className="flex items-center gap-2 px-2 py-2 cursor-pointer rounded-xl bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-blue-100 dark:hover:bg-gray-700 transition-colors duration-200 shadow-md font-semibold text-base"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {dark ? (
+              <span className="text-yellow-400 text-xl">
+          <LucideSun />
+              </span>
+            ) : (
+              <span className="text-blue-500 text-xl">
+          <LucideMoon />
+              </span>
+            )}
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        {/* Input Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          {/* HTML Input */}
+          <div className="space-y-2">
+            <label className="flex gap-1 text-base font-semibold text-blue-700 dark:text-blue-200 mb-1">
+              <Code2 />
+              HTML Input
+            </label>
+            <VscodeEditor
+              value={html}
+              onChange={setHtml}
+              language="html"
+              height="320px"
+              placeholder="Paste your HTML code here..."
+            />
+          </div>
+
+          {/* CSS Input */}
+          <div className="space-y-2">
+            <label className="flex gap-1 text-base font-semibold text-blue-700 dark:text-blue-200 mb-1">
+              <FileJson2 />
+              CSS Input
+            </label>
+            <VscodeEditor
+              value={css}
+              onChange={setCss}
+              language="css"
+              height="320px"
+              placeholder="Paste your CSS code here..."
+            />
+          </div>
+        </div>
+
+        {/* Clean Button */}
+        <div className="text-center mb-10">
+          <button
+            onClick={handleCleanCss}
+            disabled={!html.trim() || !css.trim()}
+            className="px-10 inline-flex gap-1 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:cursor-not-allowed text-lg tracking-wide"
+          >
+            <BrushCleaning />
+            Clean Unused CSS
+          </button>
+        </div>
+
+        {/* Result Section */}
+        <div className="space-y-2 mb-10">
+          <div className="flex items-center justify-between">
+            <label className="block text-base font-semibold text-blue-700 dark:text-blue-200">
+              Cleaned CSS Result
+            </label>
+            {result && (
+              <button
+                onClick={() => navigator.clipboard.writeText(result)}
+                className="px-4 py-2 text-sm bg-green-200 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg hover:bg-green-300 dark:hover:bg-green-800 transition-colors duration-200 font-semibold shadow"
+              >
+                📋 Copy
+              </button>
+            )}
+          </div>
+          <VscodeEditor
+            value={result}
+            onChange={() => { }}
+            language="css"
+            height="180px"
+            placeholder="Cleaned CSS will appear here..."
+            readOnly
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+        </div>
+
+        {/* Usage Instructions */}
+        <div className="mt-8 p-8 bg-blue-100/70 dark:bg-blue-900/30 rounded-2xl border border-blue-200 dark:border-blue-800 shadow-md">
+          <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+            <span>ℹ️</span> How to use:
+          </h3>
+          <ol className="list-decimal list-inside space-y-2 text-blue-800 dark:text-blue-200 text-base pl-4">
+            <li>Paste your <span className="font-semibold">HTML</span> code in the left editor</li>
+            <li>Paste your <span className="font-semibold">CSS</span> code in the right editor</li>
+            <li>Click <span className="font-semibold">"Clean Unused CSS"</span> to remove unused CSS classes</li>
+            <li>Copy the cleaned CSS from the result area</li>
+          </ol>
+        </div>
+      </div>
+    </div >
+  )
 }
+
+export default Home
